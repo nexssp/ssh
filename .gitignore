@@ -1,0 +1,15 @@
+.DS_Store
+
+# Per-user SSH profile and host-trust data.
+profiles.yml
+profiles.yaml
+*.local.yml
+*.local.yaml
+known_hosts
+known_hosts.old
+
+# SSH private keys (including OpenSSH defaults and common key-file extensions).
+id_*
+*.pem
+*.key
+*.ppk

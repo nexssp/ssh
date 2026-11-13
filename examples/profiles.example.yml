@@ -1,0 +1,16 @@
+# Copy this file to your local config as profiles.yml, then replace the placeholders.
+# Never put private-key contents in this file or commit local profiles or keys.
+profiles:
+  staging:
+    host: staging.example.net
+    port: 22
+    username: deploy
+    identity_file: ~/.ssh/id_ed25519
+    known_hosts_file: ~/.ssh/known_hosts
+
+  production:
+    host: production.example.net
+    port: 22
+    username: deploy
+    use_agent: true
+    known_hosts_file: ~/.ssh/known_hosts

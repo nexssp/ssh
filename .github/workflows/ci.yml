@@ -1,0 +1,46 @@
+name: Go CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: build · format · lint · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9.3.0
+        with:
+          version: v2.14.0
+          install-only: true
+
+      - name: Check module tidiness
+        run: go mod tidy -diff
+
+      - name: Install Flow CLI
+        run: go install github.com/nexssp/flow/cmd/nflow@v0.70.0
+
+      - name: Run repository checks
+        run: task ci

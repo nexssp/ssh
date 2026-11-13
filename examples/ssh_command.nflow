@@ -1,0 +1,5 @@
+@require ../nexssflow { profiles_file: "~/.config/nexss/ssh/profiles.yml", timeout: "2m" }
+@include "./modules/ssh_command.nflow" AS remote
+
+@assert result.exit_code == 0
+{ profile: "staging", command: "uname -s" } -> remote.pipeline.run

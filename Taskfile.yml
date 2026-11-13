@@ -1,0 +1,77 @@
+version: '3'
+
+vars:
+  GOTEST: '{{.GOTEST | default "go test"}}'
+  NFLOW: '{{.NFLOW | default "nflow"}}'
+
+tasks:
+  default:
+    cmds: [task --list --sort none]
+    silent: true
+
+  build:
+    desc: Build all Go packages
+    cmds:
+      - go build {{.CLI_ARGS | default "./..."}}
+
+  tidy:
+    desc: Run go mod tidy
+    cmds:
+      - go mod tidy
+
+  fmt:
+    desc: Format Go source with golangci-lint formatters
+    cmds:
+      - golangci-lint fmt
+
+  fmt-check:
+    desc: Check Go formatting without modifying files
+    cmds:
+      - |
+        if output="$(golangci-lint fmt --diff --color=never)"; then
+          if [ -n "$output" ]; then
+            printf '%s\n' "$output"
+            echo "Run 'task fmt' to apply formatters."
+            exit 1
+          fi
+        else
+          status=$?
+          printf '%s\n' "$output"
+          exit "$status"
+        fi
+
+  test:
+    desc: Run Go unit tests
+    cmds:
+      - '{{.GOTEST}} -short {{.CLI_ARGS | default "./..."}}'
+
+  race:
+    desc: Run Go tests with the race detector
+    cmds:
+      - '{{.GOTEST}} -race -count=1 {{.CLI_ARGS | default "./..."}}'
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet {{.CLI_ARGS | default "./..."}}
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run {{.CLI_ARGS | default "./..."}}
+
+  'lint:nflow':
+    desc: Lint NFlow examples (requires the Flow v0.70.0 CLI)
+    cmds:
+      - cd examples && {{.NFLOW}} lint ssh_command.nflow sftp_upload.nflow sftp_download.nflow
+
+  ci:
+    desc: Run formatting, build, Go tests, lint, and NFlow example checks
+    cmds:
+      - task: fmt-check
+      - task: build
+      - task: test
+      - task: race
+      - task: vet
+      - task: lint
+      - task: lint:nflow

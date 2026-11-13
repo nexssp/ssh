@@ -1,0 +1,4 @@
+@require ../nexssflow { profiles_file: "~/.config/nexss/ssh/profiles.yml", timeout: "2m", max_bytes: 268435456 }
+@include "./modules/sftp_download.nflow" AS remote
+
+{ profile: "staging", remote_path: "/var/log/app.log", local_path: "./app.log" } -> remote.pipeline.download

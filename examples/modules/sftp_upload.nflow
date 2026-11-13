@@ -1,0 +1,3 @@
+@pipeline upload
+  ssh.sftp.upload
+@end
