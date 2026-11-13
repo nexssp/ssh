@@ -126,6 +126,13 @@ func validateProfile(name string, profile Profile) error {
 	return nil
 }
 
+// ValidateProfile checks the same constraints applied to profiles loaded from
+// YAML. Hosts adapting another local profile store should use it before passing
+// the profile to Dial, RunCommand, or SFTP operations.
+func ValidateProfile(profile Profile) error {
+	return validateProfile("", profile)
+}
+
 func validProfileName(name string) bool {
 	if name == "" || strings.TrimSpace(name) != name {
 		return false
@@ -156,6 +163,12 @@ func expandPath(value, base string) (string, error) {
 		value = filepath.Join(base, value)
 	}
 	return filepath.Abs(filepath.Clean(value))
+}
+
+// ResolveLocalPath expands the current user's ~ home and returns an absolute
+// path. Environment-variable expansion remains the caller's responsibility.
+func ResolveLocalPath(value string) (string, error) {
+	return expandPath(value, "")
 }
 
 func readBounded(filename string, limit int64) ([]byte, error) {

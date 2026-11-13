@@ -7,10 +7,10 @@ A local-first SSH command and SFTP adapter for NFlow. The NCP/NFlow runtime conn
 The repository keeps three concerns separate:
 
 - `nexssflow/` is the Flow `@require` entry point.
-- `bundles/ssh/` provides strict, time-bounded SSH command execution.
+- `bundles/ssh/` provides SSH profile validation, OpenSSH config alias listing and command preparation, key generation, host-key fingerprint/trust, connection testing, and strict time-bounded SSH execution.
 - `bundles/sftp/` provides bounded SFTP upload and download over the same SSH profile contract.
 
-There is no FTP support. Host, username, identity, and host-key trust remain in a local profile file and are never accepted as Flow action inputs.
+There is no FTP support. Remote command and SFTP actions select a local profile instead of accepting credentials. Setup actions accept only the values needed for that setup step; host-key trust is an explicit operation and is never a side effect of a failed connection.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ Each profile must set exactly one of `identity_file` or `use_agent: true`, plus 
 `@require` loads this external Flow extension; `@include` composes reusable NFlow workflows. The `profiles` value selects a local profile name, not a host or credential.
 
 ```nflow
-@require github.com/nexssp/ssh/nexssflow v0.1.0 {
+@require github.com/nexssp/ssh/nexssflow v0.2.0 {
   profiles_file: "~/.config/nexss/ssh/profiles.yml",
   timeout: "2m",
   max_bytes: 268435456
@@ -73,11 +73,18 @@ The bundle exposes:
 
 | Action | Request fields | Behavior |
 |---|---|---|
+| `ssh.config` | none | Lists concrete aliases from the local OpenSSH config. It follows bounded `Include` directives but does not evaluate all OpenSSH options or make an alias an authenticated profile. |
+| `ssh.keygen` | optional `name` | Generates an unencrypted Ed25519 key pair locally, never overwrites an existing path, and returns only the private-key path and public key. Set `key_dir` in `@require` to choose the output folder. |
+| `ssh.fingerprint` | `host`, optional `port` | Captures and fingerprints a presented host key without authenticating a user or modifying `known_hosts`. |
+| `ssh.trust` | `host`, optional `port`, `keys` | Appends only valid key lines for that exact host and port. Call only after the user explicitly approves the displayed fingerprint. Set `known_hosts_file` in `@require` to choose the trust file. |
+| `ssh.test` | `host`, optional `port`, `user`, `key` | Runs a bounded, batch-mode authentication test using OpenSSH with strict host-key checking. If `key` is empty, OpenSSH's normal local key/agent discovery is used. |
 | `ssh.run` | `profile`, `command` | Runs one remote shell command. Returns bounded `stdout`, `stderr`, `exit_code`, and duration. A non-zero remote exit code is returned as data; connection, timeout, host-key, and output-limit failures are errors. |
 | `ssh.sftp.upload` | `profile`, `local_path`, `remote_path` | Streams a bounded local regular file to a remote staging name and publishes it by rename after success. Existing remote targets are replaced only when the server supports OpenSSH's `posix-rename` extension; otherwise a rename error is returned. New-file permissions follow the SFTP server's create mode and umask. |
 | `ssh.sftp.download` | `profile`, `remote_path`, `local_path` | Streams a bounded remote regular file into a private local staging file and replaces the destination only after success. |
 
 Both transfer operations use SFTP over SSH, not FTP. The `timeout` bundle option applies to all three actions and is limited to at most 10 minutes. The `max_bytes` option sets the SFTP limit (default 256 MiB; maximum 1 GiB). SSH command stdout and stderr are independently limited to 1 MiB each.
+
+The SSH bundle can use a host application's existing profile store instead of a second YAML store. Attach a request-scoped `nexssflow.ProfileProvider` with `nexssflow.WithProfileProvider(ctx, provider)`; when present, it takes precedence over `profiles_file` and provider failures do not fall back to another store. NexssTerm uses this adapter to read its saved SSH profiles from its existing SQLite database.
 
 Commands are remote shell text. Only run trusted NFlow source, and do not interpolate untrusted values into the command string. SFTP paths are interpreted by the remote server; this adapter does not claim to confine them to a remote directory.
 
@@ -110,6 +117,10 @@ func run(ctx context.Context) error {
 ```
 
 The Go packages are `github.com/nexssp/ssh/bundles/ssh` and `github.com/nexssp/ssh/bundles/sftp`. A zero transfer limit selects the package default. A zero command/transfer timeout selects a 30-second API default; Flow sets its default timeout to two minutes. Every operation is bounded even when the parent context has no deadline.
+
+The SSH package also exports `PrepareOpenSSHArgs`, `GenerateEd25519Key`, `FingerprintHostKey`, `TrustHostKeys`, `TestOpenSSHConnection`, `ReadOpenSSHConfigAliases`, and `ValidateProfile`. Command preparation returns arguments rather than a shell string so the host can apply its own shell quoting and process lifecycle. The host application remains responsible for asking the user before calling `TrustHostKeys`.
+
+Agent authentication for Go `Dial`, `RunCommand`, and SFTP currently requires `SSH_AUTH_SOCK` to name a Unix-domain socket; Windows OpenSSH named-pipe agents are not supported for those Go operations. The `ssh.test` setup action invokes the local OpenSSH client, so Windows OpenSSH's own agent integration remains available for that check. Identity-file authentication through the Go SSH client requires an unencrypted key; encrypted keys can be used through the local OpenSSH test/interactive client.
 
 ## Local development
 
