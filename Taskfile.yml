@@ -61,7 +61,7 @@ tasks:
       - golangci-lint run {{.CLI_ARGS | default "./..."}}
 
   'lint:nflow':
-    desc: Lint NFlow examples (requires the Flow v0.70.0 CLI)
+    desc: Lint NFlow examples (requires the Flow v0.93.0 CLI)
     cmds:
       - cd examples && {{.NFLOW}} lint ssh_command.nflow sftp_upload.nflow sftp_download.nflow
 

@@ -40,7 +40,7 @@ jobs:
         run: go mod tidy -diff
 
       - name: Install Flow CLI
-        run: go install github.com/nexssp/flow/cmd/nflow@v0.70.0
+        run: go install github.com/nexssp/flow/cmd/nflow@v0.93.0
 
       - name: Run repository checks
         run: task ci

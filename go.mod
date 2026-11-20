@@ -3,8 +3,8 @@ module github.com/nexssp/ssh
 go 1.27.4
 
 require (
-	github.com/nexssp/flow v0.73.0
-	github.com/nexssp/kernel v0.38.1
+	github.com/nexssp/flow v0.93.0
+	github.com/nexssp/kernel v0.40.3
 	github.com/pkg/sftp v1.13.12
 	golang.org/x/crypto v0.59.0
 	golang.org/x/sys v0.50.0

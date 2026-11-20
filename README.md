@@ -14,8 +14,8 @@ There is no FTP support. Remote command and SFTP actions select a local profile 
 
 ## Requirements
 
-- Go 1.27.3 or newer.
-- Nexss Flow `v0.70.0` and Kernel `v0.37.0` (the compatible versions used by this module).
+- Go 1.27.4 or newer.
+- Nexss Flow `v0.93.0` and Kernel `v0.40.3` (the compatible versions used by this module).
 - A local OpenSSH identity or a running `ssh-agent`.
 - An OpenSSH `known_hosts` file containing the expected host key.
 
@@ -56,7 +56,7 @@ Each profile must set exactly one of `identity_file` or `use_agent: true`, plus 
 `@require` loads this external Flow extension; `@include` composes reusable NFlow workflows. The `profiles` value selects a local profile name, not a host or credential.
 
 ```nflow
-@require github.com/nexssp/ssh/nexssflow v0.2.0 {
+@require github.com/nexssp/ssh/nexssflow v0.3.0 {
   profiles_file: "~/.config/nexss/ssh/profiles.yml",
   timeout: "2m",
   max_bytes: 268435456
@@ -124,7 +124,7 @@ Agent authentication for Go `Dial`, `RunCommand`, and SFTP currently requires `S
 
 ## Local development
 
-The project uses go-task's `Taskfile.yml` instead of a Makefile to keep its named development commands in one declarative task runner. Install [Task](https://taskfile.dev/installation/), `golangci-lint` v2, and the Flow `nflow` CLI v0.70.0, then run `task ci` to execute the full local check sequence. Individual tasks are available as `task fmt-check`, `task test`, `task race`, `task vet`, and `task lint`.
+The project uses go-task's `Taskfile.yml` instead of a Makefile to keep its named development commands in one declarative task runner. Install [Task](https://taskfile.dev/installation/), `golangci-lint` v2, and the Flow `nflow` CLI v0.93.0, then run `task ci` to execute the full local check sequence. Individual tasks are available as `task fmt-check`, `task test`, `task race`, `task vet`, and `task lint`.
 
 No live VPS is needed for the unit suite.
 
